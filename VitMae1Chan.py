@@ -34,6 +34,7 @@ class ViTMAETrainer:
     def __init__(self, config):
         self.config = config
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        print(self.device)
         
         # Initialize model
         self.model = ViTMAEForPreTraining(config).to(self.device)
@@ -130,7 +131,9 @@ class ViTMAETrainer:
         criterion = nn.CrossEntropyLoss()
         return criterion(similarity, labels)
     
-    def train(self, train_loader, num_epochs):
+    def train(self, train_loader):
+        num_epochs = 100
+
         for epoch in range(num_epochs):
             total_loss = 0
             for batch in train_loader:
@@ -190,11 +193,10 @@ transform_pipeline = transforms.Compose([
 
 def main():
     # Configuration
-    num_epochs=100
-    batch_size=32
+    num_epochs = 100
+    batch_size = 32
     
-    
-    # Configuration
+    # Define model configuration
     config = ViTMAEConfig(
         image_size=224,  # This with patch_size=16 gives us 14x14=196 patches + 1 cls token
         patch_size=16,
@@ -204,17 +206,17 @@ def main():
         num_attention_heads=12,
         intermediate_size=3072,
         hidden_act="gelu",
-        learning_rate=1e-4,
         mask_ratio=0.75,
         decoder_num_attention_heads=12,
         decoder_hidden_size=768,
         decoder_num_hidden_layers=8,
-        num_patches=196  # 14x14 patches (cls token is handled separately)
+        num_patches=196,  # 14x14 patches (cls token is handled separately)
+        learning_rate = 1e-4
     )
     
-    # Dataset and loader setup remains the same
+    # Dataset and loader setup
     dataset = CustomImageDataset(
-        folder_path='/Users/xinyueliang/Documents/Research/RP2/ResearchProject2_BrainCancerEncode/PretrainData/',
+        folder_path='E:/Research/RP2PretrainData/',
         transform=transform_pipeline
     )
     
@@ -225,9 +227,14 @@ def main():
         num_workers=0
     )
     
-    trainer = ViTMAETrainer(config)
-    trainer.train(train_loader, num_epochs=num_epochs)
-    trainer.save_model('/Users/xinyueliang/Documents/Research/RP2/ResearchProject2_BrainCancerEncode/SavedModels/vit_mae_pretrained/')
+    # Initialize trainer
+    trainer = ViTMAETrainer(config=config)
+    
+    # Train the model
+    trainer.train(train_loader)
+    
+    # Save the model
+    trainer.save_model('E:/Research/RP2/ResearchProject2_BrainCancerEncode/SavedModels')
 
 if __name__ == "__main__":
     main()
