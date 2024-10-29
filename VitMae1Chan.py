@@ -10,6 +10,7 @@ import numpy as np
 from transformers import ViTMAEConfig, ViTMAEModel, ViTMAEForPreTraining
 import json
 from pathlib import Path
+import torch.optim.lr_scheduler as lr_scheduler
 
 class CustomImageDataset(Dataset):
     def __init__(self, folder_path, transform=None):
@@ -133,6 +134,7 @@ class ViTMAETrainer:
     
     def train(self, train_loader):
         num_epochs = 100
+        scheduler = lr_scheduler.StepLR(self.optimizer, step_size=15, gamma=0.1)
 
         for epoch in range(num_epochs):
             total_loss = 0
@@ -161,8 +163,12 @@ class ViTMAETrainer:
                 self.optimizer.step()
                 
                 total_loss += loss.item()
+        
             
             print(f"Epoch {epoch+1}/{num_epochs}, Loss: {total_loss/len(train_loader):.4f}")
+            scheduler.step()
+
+            print(f"Current learning rate: {scheduler.get_last_lr()}")
     
     def save_model(self, save_dir):
         # Create directory if it doesn't exist
